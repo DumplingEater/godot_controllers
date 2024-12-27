@@ -5,12 +5,11 @@ extends CharacterBody3D
 @export var gravity: float = -9.81
 @export var mass: float = 100
 
-var camera: Camera3D = null
+@export var camera: Camera3D = null
 var swimming: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	self.camera = get_node("%camera")  # used so we can track 'forwards'
 	add_to_group("player", true)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -51,17 +50,6 @@ func _physics_process(delta: float) -> void:
 	if not self.is_on_floor() and not self.swimming:
 		self.velocity.y += self.gravity * delta
 	
-	#var space_state = get_world_3d().direct_space_state
-	#var query = PhysicsRayQueryParameters3D.create(
-		#self.global_position,
-		#self.global_position + Vector3.DOWN
-	#)
-	#var result = space_state.intersect_ray(query)
-	#if result:
-		#var distance = self.global_position - result["position"]
-		#if distance.y < 1.1:
-			#self.velocity += Vector3.UP * (1.1 - distance.y)
-		#print("Distance y %s" % distance.y)
 	move_and_slide()
 	
 
