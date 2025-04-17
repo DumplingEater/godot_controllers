@@ -9,14 +9,17 @@ extends CharacterBody3D
 @export var camera: Camera3D = null
 var swimming: bool = false
 
+var locked: bool = false
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	add_to_group("player", true)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
+	if locked:
+		return
 	# if on floor, zero out horizontal motion so we don't slide
-
 	if self.swimming:
 		self.velocity.x *= 0.6
 		self.velocity.z *= 0.6

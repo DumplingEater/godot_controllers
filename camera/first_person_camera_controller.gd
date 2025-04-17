@@ -5,15 +5,19 @@ extends Camera3D
 var current_pitch: float = 0.0
 @export var look_sensitivity: float = 1.0
 
+var locked: bool = false
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	pass
 
 func _input(event: InputEvent):
+	if locked:
+		return
 	if event is InputEventMouseMotion:
 		# get rotations
 		var yaw = event.relative.x * look_speed * -1.0
