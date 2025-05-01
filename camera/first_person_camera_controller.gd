@@ -20,8 +20,8 @@ func _input(event: InputEvent):
 		return
 	if event is InputEventMouseMotion:
 		# get rotations
-		var yaw = event.relative.x * look_speed * -1.0
-		var pitch = event.relative.y * look_speed * -1.0
+		var yaw = event.relative.x * look_speed * -1.0 * look_sensitivity
+		var pitch = event.relative.y * look_speed * -1.0 * look_sensitivity
 		
 		# add pitch
 		current_pitch += pitch

@@ -29,7 +29,7 @@ func _process(_delta: float) -> void:
 	
 	var speed: float = move_speed
 	if Input.is_action_pressed("sprint"):
-		move_speed = sprint_speed
+		speed = sprint_speed
 	
 	if Input.is_action_pressed("move_forward"):
 		var forward: Vector3 = self.camera.basis.z * -1.0 

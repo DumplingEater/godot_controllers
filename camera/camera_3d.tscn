@@ -1,9 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://drkui44h3cxbu"]
+[gd_scene load_steps=2 format=3 uid="uid://drkui44h3cxbu"]
 
-[ext_resource type="Environment" uid="uid://dg5ayenbx5v5m" path="res://entities/camera/camera_environment.tres" id="1_nkfvj"]
-[ext_resource type="Script" path="res://entities/camera/first_person_camera_controller.gd" id="2_bgqkd"]
+[ext_resource type="Script" uid="uid://ckq63g46clf0c" path="res://addons/godot_controllers/camera/first_person_camera_controller.gd" id="2_bgqkd"]
 
 [node name="Camera3D" type="Camera3D"]
-environment = ExtResource("1_nkfvj")
 script = ExtResource("2_bgqkd")
 look_speed = 0.008
