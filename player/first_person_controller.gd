@@ -15,8 +15,17 @@ var locked: bool = false
 func _init() -> void:
 	add_to_group("player", true)
 
+func _ready() -> void:
+	print("player node:", name, " authority:", get_multiplayer_authority(), " local_id:", multiplayer.get_unique_id(), " is_auth:", is_multiplayer_authority())
+	if camera:
+		camera.current = is_multiplayer_authority()
+
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	if not is_multiplayer_authority():
+		return
+	
 	if locked:
 		return
 	# if on floor, zero out horizontal motion so we don't slide
@@ -54,7 +63,7 @@ func _process(_delta: float) -> void:
 	if Input.is_action_pressed("jump") and self.is_on_floor():
 		self.velocity += Vector3.UP * jump_impulse
 
-func _physics_process(delta: float) -> void:
+#func _physics_process(delta: float) -> void:
 	if not self.is_on_floor() and not self.swimming:
 		self.velocity.y += self.gravity * delta
 	

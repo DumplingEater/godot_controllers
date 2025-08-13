@@ -9,11 +9,10 @@ var locked: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
-	pass
+	#Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	var is_local: bool = is_multiplayer_authority()
+	current = is_local
+	set_process_input(is_local)
 
 func _input(event: InputEvent):
 	if locked:
