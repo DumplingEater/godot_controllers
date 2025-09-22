@@ -1,0 +1,2 @@
+extends SimulatorInterface
+class_name GhostSimulator

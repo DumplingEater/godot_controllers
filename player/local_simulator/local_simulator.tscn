@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cuymufhdjtwhr"]
+
+[ext_resource type="Script" uid="uid://c4xh65sskqy77" path="res://addons/godot_controllers/player/local_simulator/local_simulator.gd" id="1_tacej"]
+
+[node name="LocalSimulator" type="Node3D"]
+script = ExtResource("1_tacej")

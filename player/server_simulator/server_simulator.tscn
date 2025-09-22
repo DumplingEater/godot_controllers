@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://1h04ksjiydgm"]
+
+[ext_resource type="Script" uid="uid://dfy12ilpbp8ct" path="res://addons/godot_controllers/player/server_simulator/server_simulator.gd" id="1_qp1id"]
+
+[node name="ServerSimulator" type="Node3D"]
+script = ExtResource("1_qp1id")

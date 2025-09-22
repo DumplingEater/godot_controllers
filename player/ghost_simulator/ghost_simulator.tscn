@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwym8fcfglhi1"]
+
+[ext_resource type="Script" uid="uid://cirmewokdv1h2" path="res://addons/godot_controllers/player/ghost_simulator/ghost_simulator.gd" id="1_0ne0i"]
+
+[node name="GhostSimulator" type="Node3D"]
+script = ExtResource("1_0ne0i")
