@@ -58,6 +58,10 @@ func pack_inputs() -> int:
 	return bits
 
 func get_yaw_as_uint16() -> int:
+	if not GameManager.local_player:
+		push_warning("No player detected in local_input_controller.gd...")
+		return -1
+		
 	var forward: Vector3 = GameManager.local_player.camera.basis.z * -1.0
 	forward = forward.normalized()
 	
