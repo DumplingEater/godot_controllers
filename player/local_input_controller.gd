@@ -11,9 +11,6 @@ const TICK_OFFSET: int = 0   # size 2
 const INPUT_OFFSET: int = 2  # size 2
 const YAW_OFFSET: int = 4    # size 2
 
-## The tick is sent as an unsigned 16 bit value and wraps at this.
-const TICK_MODULO: int = 1 << 16
-
 # added in order that I thought of them
 const NONE: int = 1 << 0
 const FORWARD: int = 1 << 1
@@ -30,6 +27,39 @@ const SPRINT: int = 1 << 9
 ## clears these when it has to repeat an input, so that a repeat cannot fire
 ## the same jump or shot twice.
 const ONE_SHOT_BITS: int = JUMP | INTERACT | SHOOT | THROW_GRENADE
+
+## Build an input packet. The only place the wire layout is written, so that
+## the field widths cannot drift apart from the readers again: the tick was
+## previously written with encode_u8 while every reader used decode_u16.
+static func build_packet(tick: int, yaw: int, input_bits: int) -> PackedByteArray:
+	var packet: PackedByteArray = PackedByteArray()
+	packet.resize(PACKET_BYTE_COUNT)
+	packet.encode_u16(TICK_OFFSET, posmod(tick, NetTick.TICK_MODULO))
+	packet.encode_u16(YAW_OFFSET, yaw)
+	packet.encode_u16(INPUT_OFFSET, input_bits)
+	return packet
+
+## Whether [param packet] is long enough to read.
+static func is_packet_valid(packet: PackedByteArray) -> bool:
+	return packet.size() >= PACKET_BYTE_COUNT
+
+static func packet_tick(packet: PackedByteArray) -> int:
+	return packet.decode_u16(TICK_OFFSET)
+
+static func packet_yaw(packet: PackedByteArray) -> int:
+	return packet.decode_u16(YAW_OFFSET)
+
+static func packet_input_bits(packet: PackedByteArray) -> int:
+	return packet.decode_u16(INPUT_OFFSET)
+
+## A copy of [param packet] safe to simulate twice: held movement carries over,
+## one-off actions are cleared so a repeat cannot fire them again.
+static func without_one_shot_bits(packet: PackedByteArray) -> PackedByteArray:
+	if not is_packet_valid(packet):
+		return packet
+	var repeated: PackedByteArray = packet.duplicate()
+	repeated.encode_u16(INPUT_OFFSET, packet_input_bits(packet) & ~ONE_SHOT_BITS)
+	return repeated
 
 func _ready():
 	SignalManager.Players.LockPlayer.connect(_on_player_locked)
@@ -83,16 +113,9 @@ func _physics_process(_delta: float) -> void:
 	if locked:
 		return
 
-	var input_array: PackedByteArray = PackedByteArray()
-	input_array.resize(PACKET_BYTE_COUNT)
-
-	# The tick occupies bytes 0-1 and every reader decodes it with decode_u16,
-	# so it has to be written as a u16. Writing it with encode_u8 left the high
-	# byte zero, which silently folded the counter down to the range 0-255.
-	input_array.encode_u16(TICK_OFFSET, tick_counter)
-	tick_counter = (tick_counter + 1) % TICK_MODULO
-
-	input_array.encode_u16(YAW_OFFSET, get_yaw_as_uint16())
-	input_array.encode_u16(INPUT_OFFSET, pack_inputs())
+	var input_array: PackedByteArray = build_packet(
+		tick_counter, get_yaw_as_uint16(), pack_inputs()
+	)
+	tick_counter = NetTick.next(tick_counter)
 
 	SignalManager.UserInput.UserInputGenerated.emit(input_array)

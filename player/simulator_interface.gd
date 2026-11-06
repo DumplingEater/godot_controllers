@@ -23,21 +23,10 @@ const SERVER_TICK_KEY: int = 3
 ## subject of the snapshot it is reading.
 const PEER_ID_KEY: int = 4
 
-## Ticks are sent as unsigned 16 bit values and wrap at this.
-const TICK_MODULO: int = 1 << 16
-
 func set_owning_player(owning_player: Player):
 	player = owning_player
 	body = owning_player.body
 	camera = owning_player.camera
-
-## Shortest signed distance from tick [param b] to tick [param a], accounting
-## for the 16 bit wrap. Positive when a is ahead of b.
-static func tick_difference(a: int, b: int) -> int:
-	var diff: int = posmod(a - b, TICK_MODULO)
-	if diff >= TICK_MODULO >> 1:
-		diff -= TICK_MODULO
-	return diff
 
 func _generate_velocity_from_input_bits(_delta: float, input_bits: int, yaw_bits: int) -> Vector3:
 	if locked:
