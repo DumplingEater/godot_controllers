@@ -18,13 +18,28 @@ const INPUT_TICK_KEY: int = 0
 const POS_KEY: int = 1
 const VEL_KEY: int = 2
 const SERVER_TICK_KEY: int = 3
+## Peer whose player a snapshot describes. Required now that snapshots are
+## broadcast to every client, because the receiver is no longer always the
+## subject of the snapshot it is reading.
+const PEER_ID_KEY: int = 4
+
+## Ticks are sent as unsigned 16 bit values and wrap at this.
+const TICK_MODULO: int = 1 << 16
 
 func set_owning_player(owning_player: Player):
 	player = owning_player
 	body = owning_player.body
 	camera = owning_player.camera
 
-func _generate_velocity_from_input_bits(delta: float, input_bits: int, yaw_bits: int) -> Vector3:
+## Shortest signed distance from tick [param b] to tick [param a], accounting
+## for the 16 bit wrap. Positive when a is ahead of b.
+static func tick_difference(a: int, b: int) -> int:
+	var diff: int = posmod(a - b, TICK_MODULO)
+	if diff >= TICK_MODULO >> 1:
+		diff -= TICK_MODULO
+	return diff
+
+func _generate_velocity_from_input_bits(_delta: float, input_bits: int, yaw_bits: int) -> Vector3:
 	if locked:
 		return Vector3.ZERO
 
@@ -39,8 +54,7 @@ func _generate_velocity_from_input_bits(delta: float, input_bits: int, yaw_bits:
 	var right: Vector3 = get_right(yaw)
 	var left: Vector3 = right * -1.0
 	var backward: Vector3 = forward * -1.0
-	
-	
+
 	if input_bits & LocalInputController.FORWARD:
 		desired_velocity += Vector3(forward.x, 0, forward.z).normalized() * speed
 	if input_bits & LocalInputController.BACK:
@@ -50,21 +64,34 @@ func _generate_velocity_from_input_bits(delta: float, input_bits: int, yaw_bits:
 	if input_bits & LocalInputController.RIGHT:
 		desired_velocity += Vector3(right.x, 0, right.z).normalized() * speed
 
-	if input_bits & LocalInputController.JUMP and body.is_on_floor():
-		desired_velocity.y = jump_impulse
-	
 	return desired_velocity
-	
-func _apply_velocity(delta: float, desired_velocity: Vector3) -> void:
+
+## Whether this input should start a jump on this step. Kept separate from the
+## desired velocity so that the impulse can be assigned rather than added.
+func wants_jump(input_bits: int) -> bool:
+	if locked:
+		return false
+	if not (input_bits & LocalInputController.JUMP):
+		return false
+	if body == null:
+		return false
+	return body.is_on_floor()
+
+func _apply_velocity(delta: float, desired_velocity: Vector3, jump_triggered: bool = false) -> void:
 	body.velocity.x = desired_velocity.x
 	body.velocity.z = desired_velocity.z
-	body.velocity.y += desired_velocity.y
+
+	# Assigned rather than accumulated. Adding the impulse let it stack on every
+	# frame the jump input was held while the body still counted as on the floor.
+	if jump_triggered:
+		body.velocity.y = jump_impulse
+
 	if not body.is_on_floor():
 		body.velocity.y += gravity * delta
-	
+
 	body.move_and_slide()
 
-func _decode_yaw(yaw_as_uint16:  int) -> float:
+func _decode_yaw(yaw_as_uint16: int) -> float:
 	var yaw: float = float(float(yaw_as_uint16) / float(MathUtils.MAX_UINT16)) * TAU
 	return yaw
 
