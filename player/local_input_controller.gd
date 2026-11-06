@@ -1,9 +1,6 @@
 extends Node
 class_name LocalInputController
-
-var locked: bool = false
-
-var tick_counter: int = 0
+## Samples local input each physics frame and emits it as a packet.
 
 # consts to define packets
 const PACKET_BYTE_COUNT: int = 6
@@ -27,6 +24,10 @@ const SPRINT: int = 1 << 9
 ## clears these when it has to repeat an input, so that a repeat cannot fire
 ## the same jump or shot twice.
 const ONE_SHOT_BITS: int = JUMP | INTERACT | SHOOT | THROW_GRENADE
+
+var locked: bool = false
+
+var tick_counter: int = 0
 
 ## Build an input packet. The only place the wire layout is written, so that
 ## the field widths cannot drift apart from the readers again: the tick was

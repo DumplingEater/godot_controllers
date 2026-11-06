@@ -1,0 +1,43 @@
+name: checks
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gdscript:
+    name: parse and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Pinned: a linter that changes its mind between runs turns a green
+      # branch red without anyone touching the code.
+      - name: Install gdtoolkit
+        run: pip install 'gdtoolkit==4.5.0'
+
+      - name: Collect scripts
+        run: |
+          set -euo pipefail
+          find . -name '*.gd' -not -path './.git/*' | sort > /tmp/scripts.txt
+          echo "found $(wc -l < /tmp/scripts.txt) scripts"
+          cat /tmp/scripts.txt
+
+      # Real GDScript 2.0 parse. This is the cheap check that catches the
+      # syntax errors a human review slides straight past.
+      - name: Parse
+        run: xargs -a /tmp/scripts.txt gdparse
+
+      # This repository is small enough to hold at zero, so lint is blocking.
+      # Conventions live in .gdlintrc, which is tuned to this codebase rather
+      # than to the tool's defaults.
+      - name: Lint
+        run: xargs -a /tmp/scripts.txt gdlint

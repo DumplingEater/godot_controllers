@@ -9,13 +9,13 @@ const MAX_QUEUED_INPUTS: int = 12
 
 var queued_input_arrays: Array[PackedByteArray] = []
 
-## Last input actually simulated. Repeated when the queue runs dry so that
-## gravity and momentum keep advancing instead of the body stalling mid-air.
-var _last_input_array: PackedByteArray = PackedByteArray()
-
 ## Input tick most recently simulated, echoed back to the owning client so it
 ## knows how far its prediction has been confirmed. -1 until the first input.
 var last_processed_input_tick: int = -1
+
+## Last input actually simulated. Repeated when the queue runs dry so that
+## gravity and momentum keep advancing instead of the body stalling mid-air.
+var _last_input_array: PackedByteArray = PackedByteArray()
 
 func _ready() -> void:
 	SignalManager.Networking.ServerSimulatorSpawned.emit(player.owning_peer_id, self)

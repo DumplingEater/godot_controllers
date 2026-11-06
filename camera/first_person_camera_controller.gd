@@ -2,9 +2,9 @@ extends Camera3D
 
 @export var look_speed: float = 1.0
 @export var max_look_elevation: float = (3.0 * PI) / 8.0
-var current_pitch: float = 0.0
 @export var look_sensitivity: float = 1.0
-@onready var body: CharacterBody3D = owner   # adjust path to your player body
+
+var current_pitch: float = 0.0
 
 var locked: bool = false
 
@@ -12,6 +12,8 @@ var original_y: float
 var bob_timer: float = 0.0
 var bob_speed: float = 6.0     # frequency of the bob (steps per second)
 var bob_amount: float = 0.0125   # height of the bob
+
+@onready var body: CharacterBody3D = owner   # adjust path to your player body
 
 func _ready() -> void:
 	original_y = position.y
@@ -27,7 +29,7 @@ func _on_player_unlocked():
 func _process(delta: float) -> void:
 	if locked:
 		return
-		
+
 	var velocity = body.velocity
 	var horiz_speed = Vector2(velocity.x, velocity.z).length()
 
@@ -56,14 +58,14 @@ func _input(event: InputEvent):
 		# get rotations
 		var yaw = event.relative.x * look_speed * -1.0 * look_sensitivity
 		var pitch = event.relative.y * look_speed * -1.0 * look_sensitivity
-		
+
 		# add pitch
 		current_pitch += pitch
 		current_pitch = max(min(current_pitch, max_look_elevation), -max_look_elevation)
-		
+
 		# now get clamped pitch delta
 		pitch = current_pitch - self.rotation.x
 		self.rotate(self.basis.x, pitch)
-		
+
 		# do yaw because that's easier
 		self.rotate(Vector3.UP, yaw)

@@ -1,5 +1,15 @@
 extends Node3D
 class_name SimulatorInterface
+## Shared movement integration for the local, server and ghost simulators.
+
+const INPUT_TICK_KEY: int = 0
+const POS_KEY: int = 1
+const VEL_KEY: int = 2
+const SERVER_TICK_KEY: int = 3
+## Peer whose player a snapshot describes. Required now that snapshots are
+## broadcast to every client, because the receiver is no longer always the
+## subject of the snapshot it is reading.
+const PEER_ID_KEY: int = 4
 
 @export var move_speed: float = 2.0
 @export var sprint_speed: float = 10.0
@@ -13,15 +23,6 @@ var camera: Camera3D = null
 var locked: bool = false
 
 var accumulator: float = 0
-
-const INPUT_TICK_KEY: int = 0
-const POS_KEY: int = 1
-const VEL_KEY: int = 2
-const SERVER_TICK_KEY: int = 3
-## Peer whose player a snapshot describes. Required now that snapshots are
-## broadcast to every client, because the receiver is no longer always the
-## subject of the snapshot it is reading.
-const PEER_ID_KEY: int = 4
 
 func set_owning_player(owning_player: Player):
 	player = owning_player
