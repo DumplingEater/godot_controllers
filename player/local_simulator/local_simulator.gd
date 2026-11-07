@@ -33,19 +33,19 @@ func _physics_process(frame_delta: float) -> void:
 
 	# No input has been produced yet; decoding an empty packet would only read
 	# zeroes and push an error for every field.
-	if current_input_array.size() < LocalInputController.PACKET_BYTE_COUNT:
+	if not LocalInputController.is_packet_valid(current_input_array):
 		return
 
 	accumulator += frame_delta
 	while accumulator >= GameManager.physics_delta:
 		var delta: float = GameManager.physics_delta
 
-		var input_bits: int = current_input_array.decode_u16(LocalInputController.INPUT_OFFSET)
-		var yaw_bits: int = current_input_array.decode_u16(LocalInputController.YAW_OFFSET)
+		var input_bits: int = LocalInputController.packet_input_bits(current_input_array)
+		var yaw_bits: int = LocalInputController.packet_yaw(current_input_array)
 		var desired_velocity: Vector3 = _generate_velocity_from_input_bits(delta, input_bits, yaw_bits)
 		_apply_velocity(delta, desired_velocity, wants_jump(input_bits))
 
-		var input_tick: int = current_input_array.decode_u16(LocalInputController.TICK_OFFSET)
+		var input_tick: int = LocalInputController.packet_tick(current_input_array)
 		var snapshot: Dictionary = _generate_snapshot(input_tick)
 		_store_local_snapshot(input_tick, snapshot)
 
@@ -80,11 +80,11 @@ func replay_inputs_from_tick(start_tick: int) -> void:
 		# A typed Array[PackedByteArray] is filled with empty arrays rather than
 		# nulls, so the old "== null" test never fired and replay walked straight
 		# over slots that had never been written.
-		if input_array.size() < LocalInputController.PACKET_BYTE_COUNT:
+		if not LocalInputController.is_packet_valid(input_array):
 			break  # nothing stored, bail out
 
-		var input_bits: int = input_array.decode_u16(LocalInputController.INPUT_OFFSET)
-		var yaw_bits: int = input_array.decode_u16(LocalInputController.YAW_OFFSET)
+		var input_bits: int = LocalInputController.packet_input_bits(input_array)
+		var yaw_bits: int = LocalInputController.packet_yaw(input_array)
 		var delta: float = GameManager.physics_delta
 		var desired_velocity: Vector3 = _generate_velocity_from_input_bits(delta, input_bits, yaw_bits)
 		_apply_velocity(delta, desired_velocity, wants_jump(input_bits))

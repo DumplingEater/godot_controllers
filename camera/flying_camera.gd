@@ -8,8 +8,8 @@ var cam: Node = null
 func _ready() -> void:
 	cam = get_parent()
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+# Called every frame; the elapsed time is not needed here.
+func _process(_delta: float) -> void:
 	if Input.is_key_pressed(KEY_Q):
 		cam.global_position.y += move_speed
 	if Input.is_key_pressed(KEY_E):

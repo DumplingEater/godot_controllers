@@ -1,5 +1,15 @@
 extends Node3D
 class_name SimulatorInterface
+## Shared movement integration for the local, server and ghost simulators.
+
+const INPUT_TICK_KEY: int = 0
+const POS_KEY: int = 1
+const VEL_KEY: int = 2
+const SERVER_TICK_KEY: int = 3
+## Peer whose player a snapshot describes. Required now that snapshots are
+## broadcast to every client, because the receiver is no longer always the
+## subject of the snapshot it is reading.
+const PEER_ID_KEY: int = 4
 
 @export var move_speed: float = 2.0
 @export var sprint_speed: float = 10.0
@@ -14,30 +24,10 @@ var locked: bool = false
 
 var accumulator: float = 0
 
-const INPUT_TICK_KEY: int = 0
-const POS_KEY: int = 1
-const VEL_KEY: int = 2
-const SERVER_TICK_KEY: int = 3
-## Peer whose player a snapshot describes. Required now that snapshots are
-## broadcast to every client, because the receiver is no longer always the
-## subject of the snapshot it is reading.
-const PEER_ID_KEY: int = 4
-
-## Ticks are sent as unsigned 16 bit values and wrap at this.
-const TICK_MODULO: int = 1 << 16
-
 func set_owning_player(owning_player: Player):
 	player = owning_player
 	body = owning_player.body
 	camera = owning_player.camera
-
-## Shortest signed distance from tick [param b] to tick [param a], accounting
-## for the 16 bit wrap. Positive when a is ahead of b.
-static func tick_difference(a: int, b: int) -> int:
-	var diff: int = posmod(a - b, TICK_MODULO)
-	if diff >= TICK_MODULO >> 1:
-		diff -= TICK_MODULO
-	return diff
 
 func _generate_velocity_from_input_bits(_delta: float, input_bits: int, yaw_bits: int) -> Vector3:
 	if locked:

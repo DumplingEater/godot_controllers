@@ -9,13 +9,13 @@ const MAX_QUEUED_INPUTS: int = 12
 
 var queued_input_arrays: Array[PackedByteArray] = []
 
-## Last input actually simulated. Repeated when the queue runs dry so that
-## gravity and momentum keep advancing instead of the body stalling mid-air.
-var _last_input_array: PackedByteArray = PackedByteArray()
-
 ## Input tick most recently simulated, echoed back to the owning client so it
 ## knows how far its prediction has been confirmed. -1 until the first input.
 var last_processed_input_tick: int = -1
+
+## Last input actually simulated. Repeated when the queue runs dry so that
+## gravity and momentum keep advancing instead of the body stalling mid-air.
+var _last_input_array: PackedByteArray = PackedByteArray()
 
 func _ready() -> void:
 	SignalManager.Networking.ServerSimulatorSpawned.emit(player.owning_peer_id, self)
@@ -36,32 +36,22 @@ func queue_input(input_array: PackedByteArray) -> void:
 func simulate_tick(physics_delta: float) -> void:
 	var input_array: PackedByteArray
 	if queued_input_arrays.is_empty():
-		input_array = _repeatable_input(_last_input_array)
+		input_array = LocalInputController.without_one_shot_bits(_last_input_array)
 	else:
 		input_array = queued_input_arrays.pop_front()
 		_last_input_array = input_array
-		last_processed_input_tick = input_array.decode_u16(LocalInputController.TICK_OFFSET)
+		last_processed_input_tick = LocalInputController.packet_tick(input_array)
 
-	if input_array.size() < LocalInputController.PACKET_BYTE_COUNT:
+	if not LocalInputController.is_packet_valid(input_array):
 		# Nothing has ever arrived for this peer, so there is no input to apply.
 		return
 
-	var input_bits: int = input_array.decode_u16(LocalInputController.INPUT_OFFSET)
-	var yaw_bits: int = input_array.decode_u16(LocalInputController.YAW_OFFSET)
-	var desired_velocity: Vector3 = _generate_velocity_from_input_bits(physics_delta, input_bits, yaw_bits)
+	var input_bits: int = LocalInputController.packet_input_bits(input_array)
+	var yaw_bits: int = LocalInputController.packet_yaw(input_array)
+	var desired_velocity: Vector3 = _generate_velocity_from_input_bits(
+		physics_delta, input_bits, yaw_bits
+	)
 	_apply_velocity(physics_delta, desired_velocity, wants_jump(input_bits))
-
-## A copy of [param input_array] that is safe to simulate a second time: held
-## movement carries over, one-off actions are cleared so that repeating a
-## starved input cannot fire the same jump or shot again.
-func _repeatable_input(input_array: PackedByteArray) -> PackedByteArray:
-	if input_array.size() < LocalInputController.PACKET_BYTE_COUNT:
-		return input_array
-
-	var repeated: PackedByteArray = input_array.duplicate()
-	var bits: int = repeated.decode_u16(LocalInputController.INPUT_OFFSET)
-	repeated.encode_u16(LocalInputController.INPUT_OFFSET, bits & ~LocalInputController.ONE_SHOT_BITS)
-	return repeated
 
 ## Authoritative state for this peer as of [param current_server_tick].
 func build_snapshot(current_server_tick: int) -> Dictionary:
